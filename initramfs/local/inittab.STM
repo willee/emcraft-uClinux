@@ -1,0 +1,21 @@
+console::sysinit:/etc/rc
+ttyS0::respawn:/bin/hush -i
+# ttyS0::respawn:/bin/login -f root
+# ttyS0::respawn:/bin/sh
+
+null::wait:/bin/cat /etc/motd > /dev/ttyS0
+
+null::wait:/bin/echo ">>>> /proc/cpuinfo <<<<" > /dev/ttyS0
+null::wait:/bin/cat /proc/cpuinfo > /dev/ttyS0
+
+null::wait:/bin/echo ">>>> /proc/meminfo <<<<" > /dev/ttyS0
+null::wait:/bin/cat /proc/meminfo > /dev/ttyS0
+
+null::wait:/bin/echo ">>>> /proc/cmdline <<<<" > /dev/ttyS0
+null::wait:/bin/cat /proc/cmdline > /dev/ttyS0
+
+null::wait:/bin/echo ">>>> ls /proc/ <<<<" > /dev/ttyS0
+null::wait:/bin/ls /proc/ > /dev/ttyS0
+
+null::wait:/bin/echo ">>>> ps <<<<" > /dev/ttyS0
+null::wait:/bin/ps > /dev/ttyS0
