@@ -1,0 +1,256 @@
+•tftp
+
+	$ sudo apt-get install tftpd-hpa tftp-hpa
+	$ sudo vim /etc/default/tftpd-hpa
+	# /etc/default/tftpd-hpa
+	
+	TFTP_USERNAME=”tftp”
+	TFTP_DIRECTORY=”/home/willee/stm32/tools/kernel/emcraft/linux-emcraft-willee/arch/arm/boot
+	TFTP_ADDRESS=”0.0.0.0:69″
+	TFTP_OPTIONS=”-l -c -s”
+	
+	$ sudo service tftpd-hpa restart
+
+•Set ARM/uClinux Toolchain: 
+	wget https://sourcery.mentor.com/public/gnu_toolchain/arm-uclinuxeabi/arm-2010q1-189-arm-uclinuxeabi-i686-pc-linux-gnu.tar.bz2
+	tar -jxvf arm-2010q1-189-arm-uclinuxeabi-i686-pc-linux-gnu.tar.bz2
+	export PATH=`pwd`/arm-2010q1/bin:$PATH
+
+•cmake
+	sudo apt-get install cmake cmake-qt-gui
+
+•stlink
+	git clone https://github.com/texane/stlink.git stlink
+	cd stlink
+	mkdir build && cd build
+	cmake -DCMAKE_BUILD_TYPE=Debug ..
+	make
+	sudo make install
+	cd ..
+	sudo install -m 644 etc/udev/rules.d/49-stlinkv /etc/udev/rules.d/49-stlinkv2.rules 
+	udevadm control --reload-rules
+	udevadm trigger
+
+
+•OpenOCD 
+	git clone git://git.code.sf.net/p/openocd/code openocd
+    cd openocd
+    ./bootstrap
+    ./configure --prefix=/usr/local --enable-stlink
+    echo -e "all:\ninstall:" > doc/Makefile
+    make
+    sudo make install
+
+•genromfs
+	sudo apt-get install genromfs
+	
+•u-boot
+git clone https://github.com/willee/emcraft-u-boot.git u-boot
+cd u-boot
+make ARCH=arm CROSS_COMPILE=arm-uclinuxeabi- stm32f746-discovery_config
+make ARCH=arm CROSS_COMPILE=arm-uclinuxeabi- all
+openocd -s /usr/local/share/openocd/scripts -f board/stm32f7discovery.cfg -c "init;reset init;program u-boot.bin 0x08000000;shutdown"
+
+•kernel & rootfs
+git clone https://github.com/willee/emcraft-uClinux.git linux-emcraft-willee
+cd linux-emcraft-willee
+make ARCH=arm CROSS_COMPILE=arm-uclinuxeabi- stm32f7_defconfig
+make ARCH=arm CROSS_COMPILE=arm-uclinuxeabi- uImage
+
+
+•bootlog
+
+U-Boot 2010.03-00105-g83abe15-dirty (10月 25 2016 - 14:24:01)
+
+CPU  : STM32F7 (Cortex-M7)
+Freqs: SYSCLK=200MHz,HCLK=200MHz,PCLK1=50MHz,PCLK2=100MHz
+Board: STM32F746 Discovery Rev 1.A, www.emcraft.com
+DRAM:   8 MB
+In:    serial
+Out:   serial
+Err:   serial
+Net:   STM32_MAC
+Hit any key to stop autoboot:  0
+STM32F746-DISCO>
+STM32F746-DISCO> set image uImage
+STM32F746-DISCO> set ipaddr 10.94.50.99;set netmask 255.255.255.0;set gatewayip 10.94.50.254;set serverip 10.94.50.121;set ethaddr 00:80:E1:12:47:E2
+STM32F746-DISCO> save
+
+reset the board
+or 
+STM32F746-DISCO> run bootcmd
+Auto-negotiation...completed.
+STM32_MAC: link UP (100/Full)
+Using STM32_MAC device
+TFTP from server 10.94.50.160; our IP address is 10.94.50.99
+Filename 'uImage'.
+Load address: 0xc0007fc0
+Loading: #################################################################
+         #################################################################
+         ##################
+done
+Bytes transferred = 2167776 (2113e0 hex)
+## Booting kernel from Legacy Image at c0007fc0 ...
+   Image Name:   Linux-2.6.33-arm1
+   Image Type:   ARM Linux Kernel Image (uncompressed)
+   Data Size:    2167712 Bytes =  2.1 MB
+   Load Address: c0008000
+   Entry Point:  c0008001
+   Verifying Checksum ... OK
+   Loading Kernel Image ... OK
+OK
+
+Starting kernel ...
+
+Linux version 2.6.33-arm1 (willee@willee) (gcc version 4.4.1 (Sourcery G++ Lite 2010q1-189) ) #2 Wed Oct 26 11:20:55 CST 2016
+CPU: ARMv7-M Processor [410fc271] revision 1 (ARMv7M)
+CPU: WBA data cache, WBA instruction cache
+Machine: STMicro STM32
+Built 1 zonelists in Zone order, mobility grouping off.  Total pages: 2032
+Kernel command line: stm32_platform=stm32f7-disco console=ttyS0,115200 panic=10 loglevel=7 ip=10.94.50.99:10.94.50.160:10.94.50.254:255.255.255.0:stm32f7-disco:eth0:off ethaddr=C0:B1:3C:88:88:85
+PID hash table entries: 32 (order: -5, 128 bytes)
+Dentry cache hash table entries: 1024 (order: 0, 4096 bytes)
+Inode-cache hash table entries: 1024 (order: 0, 4096 bytes)
+Memory: 8MB = 8MB total
+Memory: 4912k/4912k available, 3280k reserved, 0K highmem
+Virtual kernel memory layout:
+    vector  : 0x00000000 - 0x00001000   (   4 kB)
+    fixmap  : 0xfff00000 - 0xfffe0000   ( 896 kB)
+    vmalloc : 0x00000000 - 0xffffffff   (4095 MB)
+    lowmem  : 0xc0000000 - 0xc0800000   (   8 MB)
+    modules : 0xc0000000 - 0xc0800000   (   8 MB)
+      .init : 0xc0008000 - 0xc00f5000   ( 948 kB)
+      .text : 0xc00f5000 - 0xc01fb000   (1048 kB)
+      .data : 0xc020a000 - 0xc02193a0   (  61 kB)
+Hierarchical RCU implementation.
+NR_IRQS:90
+Calibrating delay loop... 398.13 BogoMIPS (lpj=1990656)
+Mount-cache hash table entries: 512
+NET: Registered protocol family 16
+stm32_flash_init: Unknown platform 0x6, exit
+bio: create slab <bio-0> at 0
+Switching to clocksource cm3-systick
+NET: Registered protocol family 2
+IP route cache hash table entries: 1024 (order: 0, 4096 bytes)
+TCP established hash table entries: 512 (order: 0, 4096 bytes)
+TCP bind hash table entries: 512 (order: -1, 2048 bytes)
+TCP: Hash tables configured (established 512 bind 512)
+TCP reno registered
+RPC: Registered udp transport module.
+RPC: Registered tcp transport module.
+RPC: Registered tcp NFSv4.1 backchannel transport module.
+JFFS2 version 2.2. (NAND) © 2001-2006 Red Hat, Inc.
+Block layer SCSI generic (bsg) driver version 0.4 loaded (major 254)
+io scheduler noop registered
+io scheduler deadline registered
+io scheduler cfq registered (default)
+Serial: STM32 USART driver
+stm32serial.0: ttyS0 at MMIO 0x40011000 (irq = 37) is a STM32 USART Port
+console [ttyS0] enabled
+blackfin-eth: Using SRAM for DMA buffers from 20001000
+blackfin-eth: found MAC at 0x40028000, irq 61
+blackfin_mii_bus: probed
+found PHY id 0x7c131 addr 0
+eth0: using MII interface
+eth0: attached PHY driver [Generic PHY] (mii_bus:phy_addr=00:00, irq=-1)
+TCP cubic registered
+ARMv7-M VFP Extension supported
+IP-Config: Complete:
+     device=eth0, addr=10.94.50.99, mask=255.255.255.0, gw=10.94.50.254,
+     host=stm32f7-disco, domain=, nis-domain=(none),
+     bootserver=10.94.50.160, rootserver=10.94.50.160, rootpath=
+PHY: 00:00 - Link is Up - 100/Full
+Freeing init memory: 948K
+init started: BusyBox v1.17.0 (2016-10-21 16:39:25 CST)
+Welcome to initramfs with
+          ____ _  _
+         /  __| ||_|
+    _   _| |  | | _ ____  _   _  _  _
+   | | | | |  | || |  _ \| | | |\ \/ /
+   | |_| | |__| || | | | | |_| |/    \
+   |  ___\____|_||_|_| |_|\____|\_/\_/
+   | |
+   |_|  willee.gong@gmail.com :)
+
+For further information check:
+http://www.uclinux.org/
+
+>>>> /proc/cpuinfo <<<<
+Processor       : ARMv7-M Processor rev 1 (v7ml)
+BogoMIPS        : 398.13
+Features        : swp half thumb fastmult vfp edsp
+CPU implementer : 0x41
+CPU architecture: ?(11)
+CPU variant     : 0x0
+CPU part        : 0xc27
+CPU revision    : 1
+
+Hardware        : STMicro STM32
+Revision        : 0000
+Serial          : 0000000000000000
+>>>> /proc/meminfo <<<<
+MemTotal:           5860 kB
+MemFree:            2392 kB
+Buffers:               0 kB
+Cached:             1148 kB
+SwapCached:            0 kB
+Active:              284 kB
+Inactive:            836 kB
+Active(anon):          0 kB
+Inactive(anon):        0 kB
+Active(file):        284 kB
+Inactive(file):      836 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+MmapCopy:           1084 kB
+SwapTotal:             0 kB
+SwapFree:              0 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+AnonPages:             0 kB
+Mapped:                0 kB
+Shmem:                 0 kB
+Slab:               1104 kB
+SReclaimable:        100 kB
+SUnreclaim:         1004 kB
+KernelStack:         112 kB
+PageTables:            0 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:        2928 kB
+Committed_AS:          0 kB
+VmallocTotal:          0 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+>>>> /proc/cmdline <<<<
+stm32_platform=stm32f7-disco console=ttyS0,115200 panic=10 loglevel=7 ip=10.94.50.99:10.94.50.160:10.94.50.254:255.255.255.0:stm32f7-disco:eth0:off ethaddr=C0:B1:3C:88:88:85
+>>>> ls /proc/ <<<<
+1             7             execdomains   meminfo       sys
+10            8             filesystems   misc          timer_list
+11            9             fs            mounts        tty
+12            buddyinfo     interrupts    mtd           uptime
+13            bus           iomem         net           version
+2             cmdline       ioports       pagetypeinfo  vmstat
+27            cpuinfo       irq           partitions    zoneinfo
+3             devices       kmsg          self
+4             diskstats     loadavg       slabinfo
+5             dmamem        locks         softirqs
+6             driver        maps          stat
+>>>> ps <<<<
+  PID USER       VSZ STAT COMMAND
+    1 root       364 S    init
+    2 root         0 SW   [kthreadd]
+    3 root         0 SW   [ksoftirqd/0]
+    4 root         0 SW   [events/0]
+    5 root         0 SW   [khelper]
+    6 root         0 SW   [async/mgr]
+    7 root         0 SW   [sync_supers]
+    8 root         0 SW   [bdi-default]
+    9 root         0 SW   [kblockd/0]
+   10 root         0 SW   [rpciod/0]
+   11 root         0 SW   [kswapd0]
+   12 root         0 SW   [nfsiod]
+   13 root         0 SW   [mtdblockd]
+   29 root       352 R    /bin/ps
+~ #
