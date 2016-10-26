@@ -1512,6 +1512,13 @@ config SERIAL_STM32_CONSOLE
 	help
 	  Use STM32 serial port as the system console
 
+config SERIAL_STM32_CONSOLE_VCP
+	bool "Console on STM32 USART port through ST-Link"
+	depends on SERIAL_STM32_CONSOLE=y
+	select SERIAL_CORE_CONSOLE
+	help
+	  Use STM32 serial port through ST-Link as the system console
+
 config SERIAL_A2F_CORE_UART
 	bool "SmartFusion CoreUART IP support"
 	depends on ARCH_A2F
